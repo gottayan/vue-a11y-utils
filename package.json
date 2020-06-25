@@ -1,0 +1,42 @@
+{
+  "name": "vue-a11y-utils",
+  "version": "0.8.0",
+  "description": "Utilities for accessibility (a11y) in Vue.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jinjiang/vue-a11y-utils.git"
+  },
+  "keywords": [
+    "a11y",
+    "aria",
+    "vue",
+    "vue.js"
+  ],
+  "author": "Jinjiang <zhaojinjiang@me.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Jinjiang/vue-a11y-utils/issues"
+  },
+  "homepage": "https://github.com/Jinjiang/vue-a11y-utils#readme",
+  "devDependencies": {
+    "@vue/compiler-sfc": "^3.0.0-beta.15",
+    "husky": "^4.2.5",
+    "jest": "^26.1.0",
+    "prettier": "^2.0.5",
+    "rollup": "^2.18.0",
+    "ts-jest": "^26.1.1",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.5",
+    "vite": "^1.0.0-beta.8",
+    "vue": "^3.0.0-beta.15"
+  },
+  "dependencies": {}
+}
