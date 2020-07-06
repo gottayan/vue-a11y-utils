@@ -1,32 +1,28 @@
-import Vue from "vue";
-import Component from "vue-class-component";
+import { ComponentOptionsMixin } from 'vue'
 
-const MixinIdInterface = Vue.extend({
-  props: {
-    id: String
-  }
-});
+let lastId = Date.now()
 
-/**
- * Mixin: Id
- * - prop: id
- * - data: localId
- */
-@Component
-export default class MixinId extends MixinIdInterface {
-  get localId(): string {
-    return this.id || generateNewId();
-  }
-}
-
-let lastId = Date.now();
-
-function generateNewId() {
-  const now = Date.now();
+const generateNewId = (): string => {
+  const now = Date.now()
   if (now <= lastId) {
-    lastId++;
+    lastId++
   } else {
-    lastId = now;
+    lastId = now
   }
-  return `v-${lastId}`;
+  return `vid-${lastId}`
 }
+
+export const useId = (externalId: string | undefined): string => externalId ? externalId.toString() : generateNewId()
+
+export const useIdMixin = (externalName: string = 'id', internalName: string = 'localId'): ComponentOptionsMixin => {
+  return {
+    computed: {
+      [internalName]() {
+        return this[externalName]
+      }
+    }
+  }
+}
+
+// deprecated
+export const MixinId = useIdMixin()
