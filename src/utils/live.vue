@@ -10,72 +10,72 @@
       clip: rect(0 0 0 0);
       overflow: hidden
     ">
-      <VueAria :role="localRole" :aria="{ live: 'assertive', label, busy }">
-        <div>{{ assertive.alternate ? assertive.message : '' }}</div>
-      </VueAria>
-      <VueAria :role="localRole" :aria="{ live: 'assertive', label, busy }">
-        <div>{{ !assertive.alternate ? assertive.message : '' }}</div>
-      </VueAria>
-      <VueAria :role="localRole" :aria="{ live: 'polite', label, busy }">
-        <div>{{ polite.alternate ? polite.message : '' }}</div>
-      </VueAria>
-      <VueAria :role="localRole" :aria="{ live: 'polite', label, busy }">
-        <div>{{ !polite.alternate ? polite.message : '' }}</div>
-      </VueAria>
+      <div v-bind="aria.assertive">{{ assertive.alternate ? assertive.message : '' }}</div>
+      <div v-bind="aria.assertive">{{ !assertive.alternate ? assertive.message : '' }}</div>
+      <div v-bind="aria.polite">{{ polite.alternate ? polite.message : '' }}</div>
+      <div v-bind="aria.polite">{{ !polite.alternate ? polite.message : '' }}</div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import Vue, { VueConstructor } from "vue";
-import Component from "vue-class-component";
+import { inject } from 'vue'
+import { getAriaAttrs } from './aria'
 
-import { VueAria } from "./aria";
+type LiveInstance = {
+  message: string
+  alternate: boolean
+}
 
-const VueLiveInterface = Vue.extend({
+type LiveData = {
+  assertive: LiveInstance,
+  polite: LiveInstance,
+  busy: boolean
+}
+
+export const keyAnnounce = Symbol('announce')
+
+export const keySetBusy = Symbol('setBusy')
+
+export const useLive = () => {
+  return [inject(keyAnnounce), inject(keySetBusy)]
+}
+
+export default {
   props: {
     role: String,
     label: String
-  }
-});
-
-interface LiveData {
-  message: string;
-  alternate: boolean;
-}
-
-@Component({
-  components: { VueAria },
-  provide() {
-    const self = <VueLive>this;
+  },
+  data(): LiveData {
     return {
-      announce(message: string, important: boolean) {
-        if (important) {
-          self.assertive.message = message;
-          self.assertive.alternate = !self.assertive.alternate;
-        } else {
-          self.polite.message = message;
-          self.polite.alternate = !self.polite.alternate;
-        }
+      assertive: { message: '', alternate: false },
+      polite: { message: '', alternate: false },
+      busy: false
+    }
+  },
+  computed: {
+    localRole(): string {
+      return this.role || 'log'
+    },
+    aria(): Record<string, any> {
+      const { localRole, label, busy } = this
+      return {
+        assertive: getAriaAttrs(localRole, { live: 'assertive', label, busy }),
+        polite: getAriaAttrs(localRole, { live: 'polite', label, busy })
+      }
+    }
+  },
+  provide() {
+    return {
+      [keyAnnounce](message: string, important: boolean): void {
+        const instance: LiveInstance = important ? this.assertive : this.polite
+        instance.message = message;
+        instance.alternate = !instance.alternate;
       },
-      setBusy(busy: boolean) {
-        self.busy = busy;
+      [keySetBusy](busy: boolean): void {
+        this.busy = busy;
       }
     };
-  }
-})
-export default class VueLive extends VueLiveInterface {
-  assertive: LiveData = {
-    message: "",
-    alternate: false
-  };
-  polite: LiveData = {
-    message: "",
-    alternate: false
-  };
-  busy: boolean = false;
-  get localRole(): string {
-    return this.role || "log";
   }
 }
 </script>
