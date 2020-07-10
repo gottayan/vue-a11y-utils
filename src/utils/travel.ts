@@ -1,4 +1,5 @@
-import { getCurrentInstance } from 'vue'
+import { getCurrentInstance, ComponentOptionsMixin } from 'vue'
+import { endedEvents } from './shared'
 
 // Type defs
 
@@ -31,12 +32,14 @@ export type TravelConfig<T = any> = {
 
 type keyboardMethod = (vm: Vue, event: KeyboardEvent, config: TravelConfig) => void
 
+type HandleTravel = (event: KeyboardEvent) => void
+
 // Type helpers
 
 const parseTravelConfig = (
   travelOptions?: TravelOptions,
   name: string = 'default'
-): TravelConfig | void => {
+): TravelConfig | undefined => {
   if (!travelOptions) {
     return
   }
@@ -78,8 +81,6 @@ const paginationKeyToMethod: NameMap = {
 }
 
 // Implementation
-
-const endedEvents = new WeakSet<KeyboardEvent>()
 
 const prev: keyboardMethod = (vm, event, config) => {
   const index = config.getIndex(vm)
@@ -186,66 +187,67 @@ const esc: keyboardMethod = (vm, event, config) => {
   }
 }
 
-
 const methodMap: Record<string, keyboardMethod> = {
   prev, next, first, last, prevPage, nextPage, enter, space, esc
 }
 
-// exports
-
-type BindTravel = (event: KeyboardEvent) => void
-
-export const useKeyboardTravel = (options: TravelOptions, name?: string): BindTravel => {
-  const config = parseTravelConfig(options, name)
-  if (
-    !config ||
-    typeof config.getIndex !== 'function' ||
-    typeof config.setIndex !== 'function' ||
-    typeof config.getItems !== 'function'
-  ) {
-    return () => {}
+const handleTravel = (event: KeyboardEvent, config: TravelConfig): void => {
+  if (endedEvents.has(event)) {
+    return
   }
-  return event => {
-    if (endedEvents.has(event)) {
-      return
+
+  // TODO: vm
+  const vm = getCurrentInstance()
+
+  // get the current key and corresponding method
+  const keyToMethod: NameMap = Object.assign(
+    {},
+    defaultKeyToMethod,
+    config.orientation === 'horizontal'
+      ? horizontalKeyToMethod
+      : verticalKeyToMethod,
+    config.hasPagination ? paginationKeyToMethod : {}
+  )
+  const methodName: string = keyToMethod[event.key]
+
+  // make sure what to do next
+  const method = methodMap[methodName]
+  if (typeof method === 'function') {
+    method(vm, event, config)
+  }
+
+  // make sure whether to search
+  if (config.hasSearch && typeof config.search === 'function') {
+    let keyword = ''
+    if (event.key.match(/^Digit\d$/)) {
+      keyword = event.key.substr(5)
+    } else if (event.code.match(/^Key\w$/)) {
+      keyword = event.code.substr(3).toLowerCase()
     }
-
-    // TODO: vm
-    const vm = getCurrentInstance()
-
-    // get the current key and corresponding method
-    const keyToMethod: NameMap = Object.assign(
-      {},
-      defaultKeyToMethod,
-      config.orientation === 'horizontal'
-        ? horizontalKeyToMethod
-        : verticalKeyToMethod,
-      config.hasPagination ? paginationKeyToMethod : {}
-    )
-    const methodName: string = keyToMethod[event.key]
-
-    // make sure what to do next
-    const method = methodMap[methodName]
-    if (typeof method === 'function') {
-      method(vm, event, config)
+    if (keyword) {
+      config.search(
+        vm,
+        event,
+        keyword,
+        config.getIndex(vm),
+        config.getItems(vm)
+      ) && endedEvents.add(event)
     }
+  }
+}
 
-    // make sure whether to search
-    if (config.hasSearch && typeof config.search === 'function') {
-      let keyword = ''
-      if (event.key.match(/^Digit\d$/)) {
-        keyword = event.key.substr(5)
-      } else if (event.code.match(/^Key\w$/)) {
-        keyword = event.code.substr(3).toLowerCase()
-      }
-      if (keyword) {
-        config.search(
-          vm,
-          event,
-          keyword,
-          config.getIndex(vm),
-          config.getItems(vm)
-        ) && (event.ended = true)
+// Exports
+
+export const useKeyboardTravel = (config: TravelConfig): HandleTravel => event => handleTravel(event, config)
+
+export const useKeyboardTravelMixin = (methodName: string = 'bindTravel', options: TravelOptions): ComponentOptionsMixin => {
+  return {
+    methods: {
+      [methodName](event: KeyboardEvent, name: string = 'default'): void {
+        const config = parseTravelConfig(options, name)
+        if (config) {
+          handleTravel(event, config)
+        }
       }
     }
   }
