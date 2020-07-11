@@ -7,82 +7,71 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
+import { TrapItem, push, remove, getCurrent } from './trap-history'
 
-interface TrapInfo {
-  vm: Vue;
-  prevTraget: HTMLElement;
-}
+const trapItemKey = Symbol('TrapItem')
+const trapFocusKey = Symbol('TrapFocus')
 
-const trapStack: Array<TrapInfo> = [];
-
-/**
- * <VueFocusTrap>
- * - methods: open(), replace(), close(returnFocus)
- * - events: open, gofirst, golast
- * - slots: default slot
- */
-@Component({
-  data() {
-    return {
-      mounted: false
-    };
+export default {
+  props: {
+    autoHistory: Boolean
   },
   mounted() {
-    this.mounted = true;
-    document.addEventListener("focus", this.trapFocus, true);
+    if (this.autoHistory) {
+      const trapItem: TrapItem = {
+        instance: this,
+        activeElement: document.activeElement as HTMLElement,
+        onFocus: (): void => {
+          trapItem.activeElement.focus() 
+        },
+        onBlur: (): void => {
+          trapItem.activeElement = document.activeElement as HTMLElement
+        }
+      }
+      push(trapItem)
+      this[trapItemKey] = trapItem
+    }
+    document.addEventListener("focus", this[trapFocusKey], true);
   },
-  beforeDestroy() {
-    if (this.mounted) {
-      document.removeEventListener("focus", this.trapFocus, true);
+  beforeUnmount() {
+    if (this.autoHistory) {
+      remove(this[trapItemKey])
     }
-  }
-})
-export default class VueFocusTrap extends Vue {
-  trapFocus(event: FocusEvent) {
-    const trap = trapStack[trapStack.length - 1];
-    if (!trap || trap.vm !== this) {
-      return;
-    }
-    const root = this.$el;
-    const { start, end } = this.$refs;
-    const { target } = event;
-    if (!root.contains(<HTMLElement>target)) {
-      event.preventDefault();
-      this.$emit("gofirst");
-    } else if (target === start) {
-      event.preventDefault();
-      this.$emit("golast");
-    } else if (target === end) {
-      event.preventDefault();
-      this.$emit("gofirst");
-    }
-  }
-  open() {
-    const prevTraget = <HTMLElement>document.activeElement;
-    trapStack.push({ vm: this, prevTraget });
-    this.$emit("open");
-  }
-  replace() {
-    const prevTraget = <HTMLElement>document.activeElement;
-    trapStack.pop();
-    trapStack.push({ vm: this, prevTraget });
-    this.$emit("open");
-  }
-  close(returnFocus: any) {
-    const trap = trapStack.pop();
-    if (!trap) {
-      return;
-    }
-    const { prevTraget } = trap;
-    if (returnFocus) {
-      prevTraget.focus();
-    }
-
-    const lastTrap = trapStack[trapStack.length - 1];
-    if (lastTrap) {
-      lastTrap.vm.$emit("open", prevTraget);
+    document.removeEventListener("focus", this[trapFocusKey], true);
+  },
+  methods: {
+    [trapFocusKey](event: FocusEvent) {
+      const trapItem = getCurrent()
+      if (!trapItem) {
+        return
+      }
+      const root = this.$el as HTMLElement
+      const { start, end } = this.$refs as Record<string, HTMLElement>
+      const target = event.target as HTMLElement
+      if (!root.contains(target)) {
+        event.preventDefault()
+        this.$emit('focusFirst')
+      } else if (target === start) {
+        event.preventDefault()
+        this.$emit('focusLast')
+      } else if (target === end) {
+        event.preventDefault()
+        this.$emit('focusFirst')
+      }
+    },
+    focus() {
+      if (this.autoHistory) {
+        this.$nextTick(() => {
+          this[trapItemKey].onFocus()
+        })
+      }
+    },
+    blur() {
+      if (this.autoHistory) {
+        this.$nextTick(() => {
+          this[trapItemKey].onBlur()
+        })
+      }
     }
   }
 }
