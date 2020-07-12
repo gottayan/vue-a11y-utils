@@ -1,11 +1,29 @@
 <template>
   <div id="id-example">
     <h3>Using Implicit ID</h3>
+
+    <h4>Usage in Composition API</h4>
     <CustomInput v-for="field in implicitExampleData" :key="field.name" :label="field.label" :type="field.type" v-model="field.value" />
 
+    <h4>Usage in Options API</h4>
+    <CustomInputOptions v-for="field in implicitExampleData" :key="field.name" :label="field.label" :type="field.type" v-model="field.value" />
+
+    <h4>Usage in legacy Options API</h4>
+    <CustomInputOptionsLegacy v-for="field in implicitExampleData" :key="field.name" :label="field.label" :type="field.type" v-model="field.value" />
+
     <h3>Using Explicit ID</h3>
+
+    <h4>Usage in Composition API</h4>
     <CustomInput id="foo" v-model="explicitExampleData.value" />
     <button aria-controls="foo-input">Clear</button>
+
+    <h4>Usage in Options API</h4>
+    <CustomInputOptions customId="bar" v-model="explicitExampleData.value" />
+    <button aria-controls="bar-input">Clear</button>
+
+    <h4>Usage in legacy Options API</h4>
+    <CustomInputOptionsLegacy id="baz" v-model="explicitExampleData.value" />
+    <button aria-controls="baz-input">Clear</button>
 
     <h3>Debug info</h3>
     <p>Implicit Data</p>
@@ -18,6 +36,8 @@
 <script lang="ts">
 import { reactive } from 'vue'
 import CustomInput from './id-example-input.vue'
+import CustomInputOptions from './id-example-input-options.vue'
+import CustomInputOptionsLegacy from './id-example-input-options-legacy.vue'
 
 type FieldProps = {
   name: string
@@ -27,7 +47,7 @@ type FieldProps = {
 }
 
 export default {
-  components: { CustomInput },
+  components: { CustomInput, CustomInputOptions, CustomInputOptionsLegacy },
   setup() {
     const implicitExampleData: FieldProps[] = [
       { name: 'username', label: 'Username', type: 'text', value: 'Jinjiang' },

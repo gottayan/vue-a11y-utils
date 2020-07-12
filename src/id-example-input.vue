@@ -2,7 +2,6 @@
   <div :id="id">
     <label :id="`${id}-label`">{{ label }}</label>
     <input
-      ref="input"
       :id="`${id}-input`"
       :aria-labelledby="`${id}-label`"
       :type="type || 'text'"
@@ -12,7 +11,7 @@
 </template>
 
 <script lang="ts">
-import { ref, watch, computed, toRefs } from 'vue';
+import { computed, toRefs } from 'vue';
 import { useId } from "./utils/id";
 
 export default {

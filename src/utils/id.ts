@@ -12,13 +12,16 @@ const generateNewId = (): string => {
   return `vid-${lastId}`
 }
 
-export const useId = (externalId: string | undefined): string => externalId ? externalId.toString() : generateNewId()
+export const useId = (externalId: string | undefined): string => externalId ? externalId : generateNewId()
 
 export const useIdMixin = (externalName: string = 'id', internalName: string = 'localId'): ComponentOptionsMixin => {
   return {
+    props: {
+      [externalName]: String
+    },
     computed: {
       [internalName]() {
-        return this[externalName]
+        return this[externalName] || generateNewId()
       }
     }
   }
