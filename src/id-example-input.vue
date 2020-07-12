@@ -1,6 +1,6 @@
 <template>
   <div :id="id">
-    <label ref="label" :id="`${id}-label`">{{ label }}</label>
+    <label :id="`${id}-label`">{{ label }}</label>
     <input
       ref="input"
       :id="`${id}-input`"
@@ -20,13 +20,13 @@ export default {
     id: String,
     type: String,
     label: String,
-    value: String
+    modelValue: String
   },
   setup(props, context) {
     const id = useId(props.id)
     const value = computed({
-      get: () => props.value,
-      set: v => context.emit('input', v)
+      get: () => props.modelValue || '',
+      set: v => context.emit('update:modelValue', v)
     })
     const { type, label } = toRefs(props)
     return { id, value, type, label }
