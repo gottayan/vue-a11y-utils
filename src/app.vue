@@ -1,14 +1,19 @@
 <template>
   <div>
     <h1>Hello World!</h1>
-    <IdExample />
+    <h2>Id</h2>
+    <!-- <IdExample /> -->
+    <h2>Travel</h2>
+    <TravelExample />
   </div>
 </template>
 
 <script lang="ts">
 import IdExample from './id-example.vue'
+import TravelExample from './travel-example.vue'
+
 export default{
-  components: { IdExample }
+  components: { IdExample, TravelExample }
 }
 </script>
 

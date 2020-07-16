@@ -191,13 +191,10 @@ const methodMap: Record<string, keyboardMethod> = {
   prev, next, first, last, prevPage, nextPage, enter, space, esc
 }
 
-const handleTravel = (event: KeyboardEvent, config: TravelConfig): void => {
+const handleTravel = (event: KeyboardEvent, config: TravelConfig, vm: any = getCurrentInstance()): void => {
   if (endedEvents.has(event)) {
     return
   }
-
-  // TODO: vm
-  const vm = getCurrentInstance()
 
   // get the current key and corresponding method
   const keyToMethod: NameMap = Object.assign(
@@ -246,7 +243,7 @@ export const useKeyboardTravelMixin = (methodName: string = 'bindTravel', option
       [methodName](event: KeyboardEvent, name: string = 'default'): void {
         const config = parseTravelConfig(options, name)
         if (config) {
-          handleTravel(event, config)
+          handleTravel(event, config, this)
         }
       }
     }
