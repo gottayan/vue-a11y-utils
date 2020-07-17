@@ -29,18 +29,23 @@ type HandleShortcuts = (event: KeyboardEvent) => void
 
 function matchShortcut(shortcut: ShortcutConfig, target: EventTarget): boolean {
   const keySeq = getKeySeq(target)
+  const keySeqLength = keySeq.length
+
   const { modifiers } = shortcut
   const keys = shortcut.hasOwnProperty('keys') ? (shortcut as Keys).keys : [(shortcut as Key).key]
   const keyDownList = keys.map(key => new KeyDown(key, modifiers))
+  const keyDownListLength = keyDownList.length
 
-  if (!keyDownList.length) {
+  if (!keyDownListLength) {
     return false
   }
 
-  const keySeqLength = keySeq.length
+  if (keySeqLength < keyDownListLength) {
+    return false
+  }
 
   return keyDownList.every((keyDown, index) => {
-    const existingKeydown = keySeq[keySeqLength - 1 - index]
+    const existingKeydown = keySeq[keySeqLength - keyDownListLength + index]
     return existingKeydown && existingKeydown.equals(keyDown)
   })
 }

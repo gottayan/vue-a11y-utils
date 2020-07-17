@@ -4,16 +4,19 @@
     <h2>Id</h2>
     <!-- <IdExample /> -->
     <h2>Travel</h2>
-    <TravelExample />
+    <!-- <TravelExample /> -->
+    <h2>Shortcuts</h2>
+    <ShortcutsExample />
   </div>
 </template>
 
 <script lang="ts">
 import IdExample from './id-example.vue'
 import TravelExample from './travel-example.vue'
+import ShortcutsExample from './shortcuts-example.vue'
 
 export default{
-  components: { IdExample, TravelExample }
+  components: { IdExample, TravelExample, ShortcutsExample }
 }
 </script>
 

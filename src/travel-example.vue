@@ -1,5 +1,7 @@
 <template>
   <div id="key-travel-example">
+    <h3>Usage in Composition API</h3>
+
     <p>Selectable List</p>
     <p class="tip">
       Please active the list first and use <kbd>Arrow</kbd> keys
@@ -19,6 +21,9 @@
         :class="{ current: item.value === activeValue }"
       >{{ item.text }}</li>
     </ul>
+
+    <h3>Usage in Options API</h3>
+
     <TravelExampleOptions />
   </div>
 </template>
