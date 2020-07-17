@@ -64,14 +64,11 @@ const getShortcutsByName = (shortcutsOptions: ShortcutsOptions, name: string = '
   return Array.isArray(shortcuts) ? shortcuts : (shortcuts ? [shortcuts] : [])
 }
 
-const handleShortcuts = (event: KeyboardEvent, config: ShortcutsConfig): void => {
+const handleShortcuts = (event: KeyboardEvent, config: ShortcutsConfig, vm: any = getCurrentInstance()): void => {
   const target = event.currentTarget
   if (!target) {
     return
   }
-
-  // TODO: vm
-  const vm = getCurrentInstance()
 
   // update global unique key seq
   const updated = updateKeySeq(event, target)
@@ -81,6 +78,7 @@ const handleShortcuts = (event: KeyboardEvent, config: ShortcutsConfig): void =>
 
     // check whether end rule matched
     const touchedEndBefore = keyEventIsEnded(target, event)
+
     if (!touchedEndBefore) {
       const shortcuts = Array.isArray(config) ? config : [config]
       shortcuts.some((shortcut: ShortcutConfig) => {
@@ -119,7 +117,7 @@ export const useGlobalShortcuts = (config: ShortcutsConfig): void => {
 export const useShortcutsMixin = (methodName: string = 'bindShortcuts', options: ShortcutsOptions): ComponentOptionsMixin => {
   return {
     beforeMount() {
-      if (this.$options.$shortcuts) {
+      if (!Array.isArray(options) && options.default) {
         window.addEventListener(
           'keydown',
           this[methodName]
@@ -127,7 +125,7 @@ export const useShortcutsMixin = (methodName: string = 'bindShortcuts', options:
       }
     },
     beforeDestroy() {
-      if (this.$options.$shortcuts) {
+      if (!Array.isArray(options) && options.default) {
         window.removeEventListener(
           'keydown',
           this[methodName]
@@ -137,7 +135,7 @@ export const useShortcutsMixin = (methodName: string = 'bindShortcuts', options:
     methods: {
       [methodName](event: KeyboardEvent, name: string = 'default'): void {
         const config = getShortcutsByName(options, name)
-        handleShortcuts(event, config)
+        handleShortcuts(event, config, this)
       }
     }
   }

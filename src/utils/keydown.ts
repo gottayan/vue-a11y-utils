@@ -131,6 +131,7 @@ export const parseKeyName = (name: string): string => {
 const maxKeySeqLength = 32
 
 const keySeqMap: WeakMap<EventTarget, KeyDown[]> = new WeakMap()
+const eventsMap: WeakMap<EventTarget, KeyboardEvent[]> = new WeakMap()
 
 export const getKeySeq = (target: EventTarget): KeyDown[] => {
   const keySeq = keySeqMap.get(target) || []
@@ -140,14 +141,26 @@ export const getKeySeq = (target: EventTarget): KeyDown[] => {
   return keySeq
 }
 
+const getEvents = (target: EventTarget): KeyboardEvent[] => {
+  const events = eventsMap.get(target) || []
+  if (!eventsMap.has(target)) {
+    eventsMap.set(target, events)
+  }
+  return events
+}
+
 export const updateKeySeq = (event: KeyboardEvent, target: EventTarget): boolean => {
   const keySeq = getKeySeq(target)
+  const events = getEvents(target)
   const keyDown: KeyDown | void = parseEvent(event)
 
   if (keyDown) {
-    keySeq.push(keyDown)
-    if (keySeq.length > maxKeySeqLength) {
-      keySeq.shift()
+    if (events.indexOf(event) === -1) {
+      keySeq.push(keyDown)
+      if (keySeq.length > maxKeySeqLength) {
+        keySeq.shift()
+      }
+      events.push(event)
     }
     return true
   }
