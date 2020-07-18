@@ -1,8 +1,10 @@
+import { ComponentOptionsMixin } from "vue"
+
 export type TrapItem = {
   instance: any
   activeElement?: HTMLElement
-  onFocus?: () => void
-  onBlur?: () => void
+  onLeave?: () => void
+  onEnter?: () => void
 }
 
 let currentTrapItem: TrapItem | undefined
@@ -11,44 +13,44 @@ export const getCurrent = (): TrapItem | undefined => currentTrapItem
 let trapHistory: TrapItem[] = []
 export const getList = (): TrapItem[] => [...trapHistory]
 
-const blurCurrent = (): void => {
-  if (currentTrapItem && currentTrapItem.onBlur) {
-    currentTrapItem.onBlur()
+const enterCurrent = (): void => {
+  if (currentTrapItem && currentTrapItem.onEnter) {
+    currentTrapItem.onEnter()
   }
 }
 
-const focusCurrent = (): void => {
-  if (currentTrapItem && currentTrapItem.onFocus) {
-    currentTrapItem.onFocus()
+const leaveCurrent = (): void => {
+  if (currentTrapItem && currentTrapItem.onLeave) {
+    currentTrapItem.onLeave()
   }
 }
 
 export const push = (item: TrapItem): void => {
-  blurCurrent()
+  leaveCurrent()
   trapHistory.push(item)
   currentTrapItem = item
-  focusCurrent()
+  enterCurrent()
 }
 
 export const replace = (item: TrapItem): TrapItem | undefined => {
   if (item === trapHistory[trapHistory.length - 1]) {
     return
   }
-  blurCurrent()
+  leaveCurrent()
   const previousItem = trapHistory.pop()
   trapHistory.push(item)
   currentTrapItem = item
-  focusCurrent()
+  enterCurrent()
   return previousItem
 }
 
 export const remove = (item: TrapItem): void => {
-  const lastItem = trapHistory[trapHistory.length - 1]
   trapHistory = trapHistory.filter(existingItem => existingItem.instance !== item.instance)
-  currentTrapItem = trapHistory[trapHistory.length - 1]
+  const lastItem = trapHistory[trapHistory.length - 1]
   if (lastItem !== currentTrapItem) {
-    lastItem.onBlur && lastItem.onBlur()
-    focusCurrent()
+    leaveCurrent()
+    currentTrapItem = lastItem
+    enterCurrent()
   }
 }
 
@@ -57,14 +59,39 @@ export const goto = (item: TrapItem): void => {
   if (index < 0 || index === trapHistory.length - 1) {
     return
   }
-  blurCurrent()
+  leaveCurrent()
   trapHistory = trapHistory.slice(0, index)
   currentTrapItem = trapHistory[trapHistory.length - 1]
-  focusCurrent()
+  enterCurrent()
 }
 
 export const clear = (): void => {
-  blurCurrent()
+  leaveCurrent()
+  const firstItem = trapHistory[0]
   trapHistory = []
   currentTrapItem = undefined
+}
+
+export const TrapHistoryMixin: ComponentOptionsMixin = {
+  mounted() {
+    const trapItem: TrapItem = {
+      instance: this,
+      activeElement: undefined,
+      onEnter: (): void => {
+        this.$nextTick(() => {
+          if (trapItem.activeElement) {
+            trapItem.activeElement.focus()
+          }
+        })
+      },
+      onLeave: (): void => {
+        trapItem.activeElement = document.activeElement as HTMLElement
+      }
+    }
+    push(trapItem)
+    this.trapItem = trapItem
+  },
+  unmounted() {
+    remove(this.trapItem)
+  }
 }

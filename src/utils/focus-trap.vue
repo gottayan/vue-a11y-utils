@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div tabindex="0">
     <div tabindex="0" ref="start"></div>
     <slot></slot>
     <div tabindex="0" ref="end"></div>
@@ -7,48 +7,29 @@
 </template>
 
 <script lang="ts">
-import { TrapItem, push, remove, getCurrent } from './trap-history'
-
-const trapItemKey = Symbol('TrapItem')
-const trapFocusKey = Symbol('TrapFocus')
+import { nextTick } from 'vue'
+import { TrapHistoryMixin } from './trap-history'
 
 export default {
+  mixins: [TrapHistoryMixin],
   props: {
     autoHistory: Boolean
   },
   mounted() {
-    if (this.autoHistory) {
-      const trapItem: TrapItem = {
-        instance: this,
-        activeElement: document.activeElement as HTMLElement,
-        onFocus: (): void => {
-          trapItem.activeElement.focus() 
-        },
-        onBlur: (): void => {
-          trapItem.activeElement = document.activeElement as HTMLElement
-        }
-      }
-      push(trapItem)
-      this[trapItemKey] = trapItem
+    if (!this.trapItem || !this.trapItem.activeElement) {
+      this.$emit('focusFirst')
     }
-    document.addEventListener("focus", this[trapFocusKey], true);
+    document.addEventListener("focus", this.trapFocus, true);
   },
   beforeUnmount() {
-    if (this.autoHistory) {
-      remove(this[trapItemKey])
-    }
-    document.removeEventListener("focus", this[trapFocusKey], true);
+    document.removeEventListener("focus", this.trapFocus, true);
   },
   methods: {
-    [trapFocusKey](event: FocusEvent) {
-      const trapItem = getCurrent()
-      if (!trapItem) {
-        return
-      }
+    trapFocus(event: FocusEvent) {
       const root = this.$el as HTMLElement
       const { start, end } = this.$refs as Record<string, HTMLElement>
       const target = event.target as HTMLElement
-      if (!root.contains(target)) {
+      if (root === target || !root.contains(target)) {
         event.preventDefault()
         this.$emit('focusFirst')
       } else if (target === start) {
@@ -57,20 +38,6 @@ export default {
       } else if (target === end) {
         event.preventDefault()
         this.$emit('focusFirst')
-      }
-    },
-    focus() {
-      if (this.autoHistory) {
-        this.$nextTick(() => {
-          this[trapItemKey].onFocus()
-        })
-      }
-    },
-    blur() {
-      if (this.autoHistory) {
-        this.$nextTick(() => {
-          this[trapItemKey].onBlur()
-        })
       }
     }
   }

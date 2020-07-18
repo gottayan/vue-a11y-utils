@@ -6,7 +6,9 @@
     <h2>Travel</h2>
     <!-- <TravelExample /> -->
     <h2>Shortcuts</h2>
-    <ShortcutsExample />
+    <!-- <ShortcutsExample /> -->
+    <h2>Focus Trap</h2>
+    <FocusTrapExample />
   </div>
 </template>
 
@@ -14,9 +16,15 @@
 import IdExample from './id-example.vue'
 import TravelExample from './travel-example.vue'
 import ShortcutsExample from './shortcuts-example.vue'
+import FocusTrapExample from './focus-trap-example.vue'
 
 export default{
-  components: { IdExample, TravelExample, ShortcutsExample }
+  components: {
+    IdExample,
+    TravelExample,
+    ShortcutsExample,
+    FocusTrapExample
+  }
 }
 </script>
 
