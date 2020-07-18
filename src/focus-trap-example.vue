@@ -1,15 +1,16 @@
 <template>
   <div id="focus-trap-example">
+    <h3>Simple dialog</h3>
+
     <p>
-      <button class="trigger" @click="openDialog">
+      <button class="trigger" @click="shown = true">
         Open a Modal Dialog
       </button>
     </p>
     <div v-if="shown" class="dialog">
       <FocusTrap
-        ref="dialog"
-        @focusFirst="goFirst"
-        @focusLast="goLast"
+        @focusFirst="email.focus()"
+        @focusLast="cancel.focus()"
         autoHistory
       >
         <h1>Modal Dialog</h1>
@@ -21,41 +22,34 @@
           Password
           <input type="password" />
         </label>
-        <button @click="closeDialog">Login</button>
-        <button :ref="el => cancel = el" @click="closeDialog">Cancel</button>
+        <button @click="shown = false">Login</button>
+        <button :ref="el => cancel = el" @click="shown = false">Cancel</button>
       </FocusTrap>
     </div>
+
+    <h3>Nested dialogs</h3>
+
+    <FocusTrapExampleNested />
   </div>
 </template>
 
 <script lang="ts">
-import { ref, reactive, nextTick, onMounted, getCurrentInstance } from 'vue'
+import { ref } from 'vue'
 import { TrapHistoryMixin } from './utils/trap-history'
 import FocusTrap from './utils/focus-trap.vue'
+import FocusTrapExampleNested from './focus-trap-example-nested.vue'
 
 export default {
-  components: { FocusTrap },
+  components: { FocusTrap, FocusTrapExampleNested },
   mixins: [TrapHistoryMixin],
   setup() {
     const shown = ref(false)
-    const trigger = ref(null)
 
     const email = ref(null)
     const cancel = ref(null)
 
-    const goFirst = () => email.value.focus()
-    const goLast = () => cancel.value.focus()
-
-    const openDialog = () => shown.value = true
-    const closeDialog = () => shown.value = false
-
     return {
       shown,
-      openDialog,
-      closeDialog,
-      goFirst,
-      goLast,
-      trigger,
       email,
       cancel
     }
