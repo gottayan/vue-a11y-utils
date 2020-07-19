@@ -1,5 +1,5 @@
 <template>
-  <div id="focus-trap-example">
+  <div>
     <p>
       <button class="trigger" @click="current = 'login'">
         Login ...
