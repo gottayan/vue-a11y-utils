@@ -10,9 +10,9 @@
       <FocusTrap
         v-if="loginShown || signupShown"
         v-show="loginShown"
+        :disabled="!loginShown"
         autoHistory
         autoFocus
-        :disabled="!loginShown"
         @focusFirst="firstInLogin.focus()"
         @focusLast="lastInLogin.focus()"
       >
@@ -33,9 +33,9 @@
 
       <FocusTrap
         v-if="signupShown"
+        :disabled="!signupShown"
         autoHistory
         autoFocus
-        :disabled="!signupShown"
         @focusFirst="firstInSignup.focus()"
         @focusLast="lastInSignup.focus()"
       >
@@ -57,12 +57,10 @@
 
 <script lang="ts">
 import { ref, computed } from 'vue'
-import { TrapHistoryMixin } from './utils/trap-history'
 import FocusTrap from './utils/focus-trap.vue'
 
 export default {
   components: { FocusTrap },
-  mixins: [TrapHistoryMixin],
   setup() {
     const current = ref('body')
 

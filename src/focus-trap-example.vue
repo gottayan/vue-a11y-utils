@@ -40,14 +40,12 @@
 
 <script lang="ts">
 import { ref } from 'vue'
-import { TrapHistoryMixin } from './utils/trap-history'
 import FocusTrap from './utils/focus-trap.vue'
 import FocusTrapExampleNested from './focus-trap-example-nested.vue'
 import FocusTrapExampleCustomized from './focus-trap-example-customized.vue'
 
 export default {
   components: { FocusTrap, FocusTrapExampleNested, FocusTrapExampleCustomized },
-  mixins: [TrapHistoryMixin],
   setup() {
     const shown = ref(false)
 

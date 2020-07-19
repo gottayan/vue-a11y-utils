@@ -48,15 +48,6 @@ export default {
         event.preventDefault()
         this.$emit('focusFirst')
       }
-    },
-    bindTrapItem(item: TrapItem) {
-      this.trapItem = item
-    },
-    focus() {
-      push(this.trapItem)
-    },
-    blur() {
-      remove(this.trapItem)
     }
   }
 }

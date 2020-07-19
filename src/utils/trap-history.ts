@@ -7,36 +7,36 @@ export type Focusable = {
 export type TrapItem = {
   instance: any
   activeElement?: HTMLElement | Focusable
-  onLeave?: () => void
-  onEnter?: () => void
+  onLeave?: (this: TrapItem) => void
+  onEnter?: (this: TrapItem) => void
 }
 
-let currentTrapItem: TrapItem | undefined
-export const getCurrent = (): TrapItem | undefined => currentTrapItem
+export const baseTrapItem: TrapItem = {
+  instance: {}
+}
 
-let trapHistory: TrapItem[] = []
+let currentTrapItem: TrapItem = baseTrapItem
+export const getCurrent = (): TrapItem => currentTrapItem
+
+let trapHistory: TrapItem[] = [baseTrapItem]
 export const getList = (): TrapItem[] => [...trapHistory]
 
 const enterCurrent = (): void => {
-  if (currentTrapItem) {
-    if (currentTrapItem.onEnter) {
-      currentTrapItem.onEnter()
-    } else {
-      const item = currentTrapItem
-      nextTick(() => {
-        item.activeElement?.focus()
-      })
-    }
+  if (currentTrapItem.onEnter) {
+    currentTrapItem.onEnter()
+  } else {
+    const item = currentTrapItem
+    nextTick(() => {
+      item.activeElement?.focus()
+    })
   }
 }
 
 const leaveCurrent = (): void => {
-  if (currentTrapItem) {
-    if (currentTrapItem.onLeave) {
-      currentTrapItem.onLeave()
-    } else {
-      currentTrapItem.activeElement = document.activeElement as HTMLElement
-    }
+  if (currentTrapItem.onLeave) {
+    currentTrapItem.onLeave()
+  } else {
+    currentTrapItem.activeElement = document.activeElement as HTMLElement
   }
 }
 
@@ -81,10 +81,12 @@ export const goto = (item: TrapItem): void => {
 }
 
 export const clear = (): void => {
-  leaveCurrent()
-  const firstItem = trapHistory[0]
-  trapHistory = []
-  currentTrapItem = undefined
+  if (trapHistory.length > 1) {
+    leaveCurrent()
+    trapHistory = [baseTrapItem]
+    currentTrapItem = baseTrapItem
+    enterCurrent()
+  }
 }
 
 export const useTrapHistoryMixin = (trapItemName: string = 'trapItem', autoHistoryName: string = ''): ComponentOptionsMixin => ({
