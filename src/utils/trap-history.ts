@@ -1,8 +1,12 @@
-import { ComponentOptionsMixin } from "vue"
+import { ComponentOptionsMixin, nextTick, onMounted, getCurrentInstance, onUnmounted } from "vue"
+
+export type Focusable = {
+  focus: () => void
+}
 
 export type TrapItem = {
   instance: any
-  activeElement?: HTMLElement
+  activeElement?: HTMLElement | Focusable
   onLeave?: () => void
   onEnter?: () => void
 }
@@ -14,14 +18,25 @@ let trapHistory: TrapItem[] = []
 export const getList = (): TrapItem[] => [...trapHistory]
 
 const enterCurrent = (): void => {
-  if (currentTrapItem && currentTrapItem.onEnter) {
-    currentTrapItem.onEnter()
+  if (currentTrapItem) {
+    if (currentTrapItem.onEnter) {
+      currentTrapItem.onEnter()
+    } else {
+      const item = currentTrapItem
+      nextTick(() => {
+        item.activeElement?.focus()
+      })
+    }
   }
 }
 
 const leaveCurrent = (): void => {
-  if (currentTrapItem && currentTrapItem.onLeave) {
-    currentTrapItem.onLeave()
+  if (currentTrapItem) {
+    if (currentTrapItem.onLeave) {
+      currentTrapItem.onLeave()
+    } else {
+      currentTrapItem.activeElement = document.activeElement as HTMLElement
+    }
   }
 }
 
@@ -72,26 +87,30 @@ export const clear = (): void => {
   currentTrapItem = undefined
 }
 
-export const TrapHistoryMixin: ComponentOptionsMixin = {
+export const useTrapHistoryMixin = (trapItemName: string = 'trapItem', autoHistoryName: string = ''): ComponentOptionsMixin => ({
   mounted() {
-    const trapItem: TrapItem = {
-      instance: this,
-      activeElement: undefined,
-      onEnter: (): void => {
-        this.$nextTick(() => {
-          if (trapItem.activeElement) {
-            trapItem.activeElement.focus()
-          }
-        })
-      },
-      onLeave: (): void => {
-        trapItem.activeElement = document.activeElement as HTMLElement
-      }
+    if (autoHistoryName && !this[autoHistoryName]) {
+      return
     }
+    const trapItem: TrapItem = {
+      instance: this
+    }
+    this[trapItemName] = trapItem
     push(trapItem)
-    this.trapItem = trapItem
   },
   unmounted() {
-    remove(this.trapItem)
+    if (autoHistoryName && !this[autoHistoryName]) {
+      return
+    }
+    remove(this[trapItemName])
   }
+})
+
+export const useTrapHistory = (trapItem: TrapItem = {
+  instance: getCurrentInstance()
+}): void => {
+  onMounted(() => push(trapItem))
+  onUnmounted(() => remove(trapItem))
 }
+
+export const TrapHistoryMixin = useTrapHistoryMixin('trapItem')

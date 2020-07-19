@@ -8,16 +8,22 @@
 
 <script lang="ts">
 import { nextTick } from 'vue'
-import { TrapHistoryMixin } from './trap-history'
+import { useTrapHistoryMixin, push, remove, TrapItem } from './trap-history'
 
 export default {
-  mixins: [TrapHistoryMixin],
+  mixins: [useTrapHistoryMixin('trapItem', 'autoHistory')],
   props: {
-    autoHistory: Boolean
+    autoHistory: Boolean,
+    autoFocus: Boolean,
+    disabled: Boolean
   },
   mounted() {
-    if (!this.trapItem || !this.trapItem.activeElement) {
-      this.$emit('focusFirst')
+    if (this.trapItem && this.trapItem.activeElement) {
+      this.trapItem.activeElement.focus()
+    } else {
+      if (this.autoFocus) {
+        this.$emit('focusFirst')
+      }
     }
     document.addEventListener("focus", this.trapFocus, true);
   },
@@ -26,6 +32,9 @@ export default {
   },
   methods: {
     trapFocus(event: FocusEvent) {
+      if (this.disabled) {
+        return
+      }
       const root = this.$el as HTMLElement
       const { start, end } = this.$refs as Record<string, HTMLElement>
       const target = event.target as HTMLElement
@@ -39,6 +48,15 @@ export default {
         event.preventDefault()
         this.$emit('focusFirst')
       }
+    },
+    bindTrapItem(item: TrapItem) {
+      this.trapItem = item
+    },
+    focus() {
+      push(this.trapItem)
+    },
+    blur() {
+      remove(this.trapItem)
     }
   }
 }

@@ -11,10 +11,12 @@
         v-if="loginShown || signupShown"
         v-show="loginShown"
         autoHistory
+        autoFocus
+        :disabled="!loginShown"
         @focusFirst="firstInLogin.focus()"
         @focusLast="lastInLogin.focus()"
       >
-        <h1>Login dialog</h1>
+        <h1>Login Dialog</h1>
         <label>
           Email:
           <input :ref="el => firstInLogin = el" type="email" />
@@ -32,17 +34,22 @@
       <FocusTrap
         v-if="signupShown"
         autoHistory
+        autoFocus
+        :disabled="!signupShown"
         @focusFirst="firstInSignup.focus()"
         @focusLast="lastInSignup.focus()"
       >
-        <h1>Sign up dialog</h1>
+        <h1>Sign up Dialog</h1>
         <label>
           Email:
           <input :ref="el => firstInSignup = el" type="email" />
         </label>
-        <button @click="current = 'login'">Sign up</button>
+        <label>
+          Password
+          <input type="password" />
+        </label>
+        <button @click="current = 'login'">Create</button>
         <button :ref="el => lastInSignup = el" @click="current = 'login'">Back</button>
-        <!-- <button @click="current = 'body'">Cancel</button> -->
       </FocusTrap>
     </div>
   </div>

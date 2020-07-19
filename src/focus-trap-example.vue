@@ -12,6 +12,7 @@
         @focusFirst="email.focus()"
         @focusLast="cancel.focus()"
         autoHistory
+        autoFocus
       >
         <h1>Modal Dialog</h1>
         <label>
@@ -30,6 +31,10 @@
     <h3>Nested dialogs</h3>
 
     <FocusTrapExampleNested />
+
+    <h3>Customized dialogs</h3>
+
+    <FocusTrapExampleCustomized />
   </div>
 </template>
 
@@ -38,9 +43,10 @@ import { ref } from 'vue'
 import { TrapHistoryMixin } from './utils/trap-history'
 import FocusTrap from './utils/focus-trap.vue'
 import FocusTrapExampleNested from './focus-trap-example-nested.vue'
+import FocusTrapExampleCustomized from './focus-trap-example-customized.vue'
 
 export default {
-  components: { FocusTrap, FocusTrapExampleNested },
+  components: { FocusTrap, FocusTrapExampleNested, FocusTrapExampleCustomized },
   mixins: [TrapHistoryMixin],
   setup() {
     const shown = ref(false)
