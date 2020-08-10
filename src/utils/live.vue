@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-import { inject } from 'vue'
+import { inject, InjectionKey } from 'vue'
 import { getAriaAttrs } from './aria'
 
 type LiveInstance = {
@@ -33,12 +33,19 @@ type LiveData = {
   busy: boolean
 }
 
-export const keyAnnounce = Symbol('announce')
+type Announce = (message: string, important: boolean) => void
 
-export const keySetBusy = Symbol('setBusy')
+type SetBusy = (busy: boolean) => void
 
-export const useLive = () => {
-  return [inject(keyAnnounce), inject(keySetBusy)]
+// TODO: Symbol doesn't work
+export const keyAnnounce: string = "Symbol('announce')"
+export const keySetBusy: string = "Symbol('setBusy')"
+
+export const useLive = (): [Announce?, SetBusy?] => {
+  return [
+    inject<Announce>(keyAnnounce),
+    inject<SetBusy>(keySetBusy)
+  ]
 }
 
 export default {
@@ -66,14 +73,15 @@ export default {
     }
   },
   provide() {
+    const self = this
     return {
       [keyAnnounce](message: string, important: boolean): void {
-        const instance: LiveInstance = important ? this.assertive : this.polite
+        const instance: LiveInstance = important ? self.assertive : self.polite
         instance.message = message;
         instance.alternate = !instance.alternate;
       },
       [keySetBusy](busy: boolean): void {
-        this.busy = busy;
+        self.busy = busy;
       }
     };
   }

@@ -2,13 +2,17 @@
   <div>
     <h1>Hello World!</h1>
     <h2>Id</h2>
-    <!-- <IdExample /> -->
+    <IdExample />
     <h2>Travel</h2>
-    <!-- <TravelExample /> -->
+    <TravelExample />
     <h2>Shortcuts</h2>
-    <!-- <ShortcutsExample /> -->
+    <ShortcutsExample />
     <h2>Focus Trap</h2>
-    <!-- <FocusTrapExample /> -->
+    <FocusTrapExample />
+    <h2>Live</h2>
+    <Live>
+      <LiveExample />
+    </Live>
     <h2>Overwrite Attributes</h2>
     <OverwriteAttrsExample />
   </div>
@@ -19,6 +23,8 @@ import IdExample from './id-example.vue'
 import TravelExample from './travel-example.vue'
 import ShortcutsExample from './shortcuts-example.vue'
 import FocusTrapExample from './focus-trap-example.vue'
+import LiveExample from './live-example.vue'
+import Live from './utils/live.vue'
 import OverwriteAttrsExample from './overwrite-example.vue'
 
 export default{
@@ -27,7 +33,9 @@ export default{
     TravelExample,
     ShortcutsExample,
     FocusTrapExample,
-    OverwriteAttrsExample
+    OverwriteAttrsExample,
+    Live,
+    LiveExample
   }
 }
 </script>
