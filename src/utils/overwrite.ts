@@ -1,4 +1,4 @@
-import { onMounted, nextTick, Ref } from "vue"
+import { Ref, computed, watchEffect, onMounted, onBeforeUnmount, nextTick } from "vue"
 
 export type Attrs = Record<string, string>
 export type MutateAttrs = (oldAttrs: Attrs) => Attrs
@@ -12,8 +12,10 @@ const normalizeEl = (input: ElementInput): HTMLElement | null =>
 
 const normalizeAttrs = (input: Attrs): void => {
   for (const name in input) {
-    const value = input[name].toString()
-    input[name] = value
+    const value = input[name]
+    if (value !== null || value !== undefined) {
+      input[name] = value.toString()
+    }
   }
 }
 
@@ -30,49 +32,110 @@ const getOldAttrs = (target: HTMLElement): Attrs => {
   return attrs
 }
 
-const observeTarget = (target: HTMLElement, input: AttrsInput): void => {
+const setAttrs = (target: HTMLElement, attrs: Attrs): void => {
+  for (const name in attrs) {
+    if (target.getAttribute(name) !== attrs[name]) {
+      target.setAttribute(name, attrs[name])
+    }
+  }
+}
+
+const updateAttrs = (target: HTMLElement, input: AttrsInput): void => {
+  if (typeof input === 'function') {
+    const oldAttrs = getOldAttrs(target)
+    const newAttrs = computed(() => input(oldAttrs))
+    watchEffect(() => {
+      setAttrs(target, newAttrs.value)
+    })
+  } else {
+    setAttrs(target, input)
+  }
+}
+
+const observeTarget = (target: HTMLElement | null, input: AttrsInput): MutationObserver | null => {
+  if (!target) {
+    return null;
+  }
+  updateAttrs(target, input)
   const observer = new MutationObserver(() => {
     nextTick(() => {
-      const newAttrs = typeof input === 'function' ? input(getOldAttrs(target)) : input
-      for (const name in newAttrs) {
-        if (target.getAttribute(name) === newAttrs[name]) {
-          target.setAttribute(name, newAttrs[name])
-        }
+      if (typeof input === 'function') {
+        const newAttrs = input(getOldAttrs(target))
+        setAttrs(target, newAttrs)
+      } else {
+        updateAttrs(target, input)
       }
     })
   })
   observer.observe(target, { attributes: true })
+  return observer;
 }
 
-const observeTargetCreated = (el: HTMLElement, target: HTMLElement | null, selector: string, input: AttrsInput): void => {
+const observeTargetCreated = (el: HTMLElement, target: HTMLElement | null, observer: MutationObserver | null, selector: string, input: AttrsInput): MutationObserver => {
   let currentTarget = target
-  const observer = new MutationObserver(() => {
+  let currentObserver = observer
+  const elObserver = new MutationObserver(() => {
     const newTarget: HTMLElement | null = el.querySelector(selector)
     if (newTarget && newTarget !== currentTarget) {
+      currentObserver?.disconnect()
       currentTarget = newTarget
-      observeTarget(currentTarget, input)
+      currentObserver = observeTarget(currentTarget, input)
     }
   })
-  observer.observe(el, { childList: true })
+  elObserver.observe(el, { childList: true })
+  return elObserver
 }
 
-export const useOverwriteAttrs = (elInput: ElementInput, selector: string, input: AttrsInput): void => {
+export const useOverwriteAttrs = (el: ElementInput, selector: string, attrs: AttrsInput): void => {
+  let elObserver: MutationObserver
   onMounted(() => {
-    const el = normalizeEl(elInput)
+    const normalizedEl = normalizeEl(el)
 
-    if (!el) {
+    if (!normalizedEl) {
       return
     }
 
-    if (typeof input !== 'function') {
-      normalizeAttrs(input)
+    if (typeof attrs !== 'function') {
+      normalizeAttrs(attrs)
     }
 
-    const target: HTMLElement | null = el.querySelector(selector)
-    if (target) {
-      observeTarget(target, input)
-    }
+    const target: HTMLElement | null = normalizedEl.querySelector(selector)
+    const observer = observeTarget(target, attrs)
 
-    observeTargetCreated(el, target, selector, input)
+    elObserver = observeTargetCreated(normalizedEl, target, observer, selector, attrs)
   })
+  onBeforeUnmount(() => {
+    if (elObserver) {
+      elObserver.disconnect()
+    }
+  })
+}
+
+const elObserverKey = Symbol('el-observer')
+
+export const OverwriteAttrs = {
+  props: {
+    selector: String,
+    attrs: Object
+  },
+  render() {
+    const result = this.$slots.default()
+    return result[0]
+  },
+  mounted() {
+    const el = this.$el
+    const { attrs, selector } = this
+    if (el && selector) {
+      const target: HTMLElement | null = el.querySelector(selector)
+      const observer = observeTarget(target, attrs as Attrs)
+
+      this[elObserverKey] = observeTargetCreated(el, target, observer, selector, attrs as Attrs)
+    }
+  },
+  beforeUnmount() {
+    const elObserver = this[elObserverKey] as MutationObserver | null
+    if (elObserver) {
+      elObserver.disconnect()
+    }
+  }
 }
